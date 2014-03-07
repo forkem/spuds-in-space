@@ -17,7 +17,7 @@ Game.Over.prototype = {
 
 		label2 = game.add.text(w/2, h/2, 'Score: '+score, { font: '18px pressstart2p', fill: '#fff', align: 'center' });
 		label2.anchor.setTo(0.5, 0.5);
-		label3 = game.add.text(w/2, h-40, 'Press ENTER', { font: '18px pressstart2p', fill: '#fff', align: 'center' });
+		label3 = game.add.text(w/2, h-40, 'Insert coin', { font: '18px pressstart2p', fill: '#fff', align: 'center' });
 		label3.anchor.setTo(0.5, 0.5);
 
 		//this.cursor = game.input.keyboard.createCursorKeys();
