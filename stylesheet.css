@@ -26,3 +26,6 @@ body {
     text-transform:uppercase;
     width:100%;
 }
+#gameContainer canvas{
+	margin:0 auto;
+}
