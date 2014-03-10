@@ -20,15 +20,12 @@ Game.Load.prototype = {
 	    game.stage.backgroundColor = '#000000';
 
 		game.load.image('intro', 'images/bg.png');
-		game.load.image('bg', 'images/bg-empty.png');
 		game.load.image('bgtile', 'images/bgTile.jpg');
-		game.load.image('player', 'images/player.png');
 		game.load.spritesheet('ship_sprite', 'images/ship_sprite.png', 40, 44, 2);
 		game.load.image('ship', 'images/ship.png');
 		game.load.image('fire', 'images/fire.png');
 		game.load.image('fire_small', 'images/fire_small.png');
 	    game.load.image('bonus', 'images/bonus.png');
-		//game.load.image('pixel', 'images/pixel.png');
 		game.load.spritesheet('bullet', 'images/bullet.png', 16, 38);
 		game.load.spritesheet('explosion', 'images/explosion.png', 40, 40, 5	);
 		game.load.image('enemy', 'images/enemy.png');
