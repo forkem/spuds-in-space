@@ -177,8 +177,9 @@ Game.Play.prototype = {
 	    		this.bulletTime = game.time.now + 300;
 	    	}
 		    var bullet = this.bullets.getFirstExists(false);
-		    bullet.anchor.setTo(0.5, 0.5);
+		    
 		    if (bullet) {
+		    	bullet.anchor.setTo(0.5, 0.5);
 			    bullet.reset(rand(w-bullet.width), -bullet.height);
 			    bullet.body.velocity.y = 350;
 			    bullet.animations.add('move');
@@ -190,9 +191,11 @@ Game.Play.prototype = {
 
 	        this.bonusTime = game.time.now + 15000;
 	        var powerup = powerups.getFirstExists(false);
-	        powerup.reset(rand(w-powerup.width)+powerup.width/2, -powerup.height/2);
-	        powerup.body.velocity.y=150;
-	        powerup.anchor.setTo(0.5, 0.5);
+	        if (powerup) {
+		        powerup.reset(rand(w-powerup.width)+powerup.width/2, -powerup.height/2);
+		        powerup.body.velocity.y=150;
+		        powerup.anchor.setTo(0.5, 0.5);
+	    	}
 	    }    
 
 	    if (this.game.time.now > invincibleTime) {
