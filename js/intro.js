@@ -1,5 +1,5 @@
 Game.Intro = function (game) {
-	this.cursor;
+
 };
 
 Game.Intro.prototype = {
@@ -11,7 +11,8 @@ Game.Intro.prototype = {
 	create: function () {
 		
 		bgTile = game.add.tileSprite(0, 0, w, h, 'bgtile');
-		var bg = game.add.sprite(0, 0, 'intro');
+		var bg = game.add.sprite(w/2, h/2, 'intro');
+		bg.anchor.setTo(0.5, 0.5);
 		bg.inputEnabled=true;
 
     	bg.events.onInputDown.add(this.startGame);
@@ -19,6 +20,10 @@ Game.Intro.prototype = {
 	},
 
 	update: function() {
+		 if (game.input.activePointer.isDown)
+	    {
+	    	this.startGame ();
+	    }
 		bgTile.tilePosition.y += 1;
 		if (game.input.keyboard.isDown(Phaser.Keyboard.ENTER))
 			this.startGame ();

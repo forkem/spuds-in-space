@@ -11,6 +11,9 @@ Game.Play.prototype = {
 	},
 	create: function () {
 
+		game.onPause.add(this.onGamePause, this);
+		game.onResume.add(this.onGameResume, this);
+
 		speeds.normalFireSpeed = 300;
 		speeds.fastFireSpeed = 200;
 
@@ -62,6 +65,7 @@ Game.Play.prototype = {
 		player.animations.play('move', 4, true);
 	    player.body.collideWorldBounds = true;
 	    player.weaponLevel = 1;
+	    this.maxWeaponLevel = 4;
 	    player.lives = 3;
 
 		this.makeInvincible();
@@ -81,9 +85,13 @@ Game.Play.prototype = {
 	    this.life3 = game.add.sprite(w-75, 5, 'ship');
 
 	    this.scoreText = game.add.text(10, 10, "0", { font: '16px pressstart2p', fill: '#ffffff' });
-
+		this.pauseText = game.add.text(w/2, h/2, "Pause", { font: '20px pressstart2p', fill: '#ffffff' });
+		this.centralize(this.pauseText);
+		this.pauseText.alpha = 0;
 	},
-
+	centralize: function (obj) {
+		obj.anchor.setTo(0.5, 0.5);
+	},
 	createSpud: function( level) {
 
 	    if (this.game.time.now > this.enemyTime) {
@@ -103,6 +111,11 @@ Game.Play.prototype = {
 			    } else {
 			    	spud.body.velocity.y = 300;
 
+			    }
+			    if (player.x > spud.x) {
+			    	spud.body.velocity.x = rand(20);
+			    } else {
+			    	spud.body.velocity.x = -rand(20);
 			    }
 			    spud.life = Math.floor(score/1000)+1;
 			    spud.angle = rand(100)*100;
@@ -198,13 +211,14 @@ Game.Play.prototype = {
 	    	player.alpha = 1;
 	    	game.physics.overlap(player, this.bullets, this.playerHit, null, this);
 	    	game.physics.overlap(player, potatoes, this.playerHit, null, this);
+	    	game.physics.overlap(player, stones, this.playerHit, null, this);
 	    } else {
 
 	    	if (this.game.time.now > blinkTime) {
 
 		        blinkTime = game.time.now + 100;
-		        if (player.alpha > 0 ) {
-		        	player.alpha = 0;
+		        if (player.alpha == 1 ) {
+		        	player.alpha = 0.2;
 		        } else {
 		        	player.alpha = 1;
 		        }
@@ -214,7 +228,7 @@ Game.Play.prototype = {
 
 	playerHit: function(player, bullet) {
 
-	    player.alpha = 0;
+	    player.alpha = 0.2;
 		this.makeInvincible();
 	    player.lives -= 1;
 
@@ -239,7 +253,10 @@ Game.Play.prototype = {
 	    
 	    game.add.tween(player).to( { y:playerY+20 }, 100, Phaser.Easing.Linear.None)
 	    		.to( { y:playerY }, 100, Phaser.Easing.Linear.None).start();
-	    player.weaponLevel = 1;
+
+	    if (player.weaponLevel > 1){
+	    	player.weaponLevel--;
+	    }
 
 	    explosion.events.onAnimationComplete.add(this.killObject, explosion);
 
@@ -250,7 +267,10 @@ Game.Play.prototype = {
 	takeBonus: function(player, powerup) {
 	    //this.bonus_s.play('', 0, 0.1);
 	    
-	    player.weaponLevel +=1 ;
+	    if (player.weaponLevel < this.maxWeaponLevel ) {
+
+	  		player.weaponLevel +=1 ;
+	  	}
 	    this.updateScore(100);
 	    	if (player.weaponLevel > 3) {
 	        	fireSpeed = speeds.fastFireSpeed;
@@ -320,7 +340,7 @@ Game.Play.prototype = {
 	    var fire = this.fires.getFirstExists(false);
 	    
 	    if (fire) {
-	    	fire.anchor.setTo(0.5, 0.5);
+	    	this.centralize( fire );
 		    fire.reset(x-fire.width/2+3, y-fire.height/2);
 		    fire.body.velocity.y =- 500;
 		    //fire.angle = 0;
@@ -360,6 +380,13 @@ Game.Play.prototype = {
 		player.lives = 3;
 		player.weaponLevel = 1;
 		fireSpeed = speeds.normalFireSpeed;
+	},
+
+	onGamePause: function() {
+		this.pauseText.alpha = 1;
+	},
+	onGameResume: function() {
+		this.pauseText.alpha = 0;
 	}
 
 };
