@@ -5,17 +5,21 @@ var speeds = new Object();
 
 Game.Play.prototype = {
 
+
 	makeInvincible: function () {
 		player.invincible = 1;
 		invincibleTime = game.time.now + 3000;
 	},
 	create: function () {
 
+		bgTile = game.add.tileSprite(0, 0, w, h, 'bgtile');
+		
 		game.onPause.add(this.onGamePause, this);
 		game.onResume.add(this.onGameResume, this);
 
 		speeds.normalFireSpeed = 300;
 		speeds.fastFireSpeed = 200;
+		speeds.nukeFireSpeed = 2000;
 
 		this.fireTime = 0; 
 		this.sidefireTime = 0; 
@@ -24,15 +28,14 @@ Game.Play.prototype = {
 		this.stoneTime = 0; 
 		this.bulletTime = 0;
 
-
 		fireSpeed = speeds.normalFireSpeed;
 		blinkTime = 0;
-		playerY = h - 70; 
+		playerInitialY = h - 70; 
 		score = 0;
 
 	    this.cursor = game.input.keyboard.createCursorKeys();
 
-		bgTile = game.add.tileSprite(0, 0, w, h, 'bgtile');
+   		enemies = game.add.group();
 
 		potatoes = game.add.group();
 	    potatoes.createMultiple(25, 'enemy');
@@ -42,13 +45,22 @@ Game.Play.prototype = {
 	    stones.createMultiple(4, 'stone');
 	    stones.setAll('outOfBoundsKill', true);
 
-		this.fires = game.add.group();
-	    this.fires.createMultiple(30, 'fire');
-	    this.fires.setAll('outOfBoundsKill', true);
+	    // Add both to enemies group, using the Pixi container otherwise it's impossible 
+	    enemies.add(potatoes._container);
+	    enemies.add(stones._container);
 
-		this.fires_sides = game.add.group();
-	    this.fires_sides.createMultiple(30, 'fire_small');
-	    this.fires_sides.setAll('outOfBoundsKill', true);
+   		fires = game.add.group();
+
+		this.frontFires = game.add.group();
+	    this.frontFires.createMultiple(30, 'fire');
+	    this.frontFires.setAll('outOfBoundsKill', true);
+
+		this.sideFires = game.add.group();
+	    this.sideFires.createMultiple(30, 'fire_small');
+	    this.sideFires.setAll('outOfBoundsKill', true);
+
+	    fires.add(this.frontFires._container);
+	    fires.add(this.sideFires._container);
 
 	    powerups = game.add.group();
 	    powerups.createMultiple(1, 'bonus');
@@ -58,8 +70,15 @@ Game.Play.prototype = {
 	    this.bullets.createMultiple(25, 'bullet');
 	    this.bullets.setAll('outOfBoundsKill', true);
 
+	    nukes = game.add.group();
+	    nukes.createMultiple(2, 'bullet');
+	    nukes.setAll('outOfBoundsKill', true);
 
-		player = game.add.sprite(w/2, playerY, 'ship_sprite');
+	    blasts = game.add.group();
+	    blasts.createMultiple(2, 'explosion');
+	    blasts.setAll('outOfBoundsKill', true);
+
+		player = game.add.sprite(w/2, playerInitialY, 'ship_sprite');
 
 		player.animations.add('move');
 		player.animations.play('move', 4, true);
@@ -67,8 +86,20 @@ Game.Play.prototype = {
 	    player.weaponLevel = 1;
 	    this.maxWeaponLevel = 4;
 	    player.lives = 3;
-
+	    player.sideShips = 2;
+	    this.centralize(player);
 		this.makeInvincible();
+
+		sideShips = game.add.group();
+	    sideShips.createMultiple(2, 'ship');
+	    ship = sideShips.getFirstExists(false);
+	    this.centralize(ship);
+	    ship.nukeTime = 0;
+	    ship.reset(player.x - 35, player.y - 10);
+	    ship = sideShips.getFirstExists(false);
+	    this.centralize(ship);
+	    ship.reset(player.x + 35, player.y - 10);
+	    ship.nukeTime = 0;
 
 	    this.hit_s = game.add.audio('hit');
 	    this.fire_s = game.add.audio('fire');
@@ -154,8 +185,15 @@ Game.Play.prototype = {
 	    if (game.input.activePointer.isDown)
 	    {
 
-	        player.x = game.input.activePointer.x - player.width/2;
-	        player.y = game.input.activePointer.y - player.height - 5;
+	        player.x = game.input.activePointer.x;
+	        player.y = game.input.activePointer.y - player.height/2;
+
+	        if (sideShips.getAt(0) && sideShips.getAt(0).alive) {
+	        	sideShips.getAt(0).reset(player.x - 35,player.y - 10 );
+	        }
+	        if (sideShips.getAt(1) && sideShips.getAt(1).alive) {
+	        	sideShips.getAt(1).reset(player.x + 35,player.y - 10 );
+	        }
 	    }
 
 		if (this.cursor.left.isDown)
@@ -167,7 +205,7 @@ Game.Play.prototype = {
 	    this.createSpud();
 
 
-	    	this.createStone();
+	    this.createStone();
 
 
 	    if (this.game.time.now > this.bulletTime) {
@@ -202,19 +240,27 @@ Game.Play.prototype = {
 	        player.invincible = false;
 	    }  
 
-	    game.physics.overlap(this.fires, potatoes, this.enemyHit, null, this);
-	    game.physics.overlap(this.fires_sides, potatoes, this.enemyHit, null, this);
-	    game.physics.overlap(this.fires_sides, this.bullets, this.enemyHit, null, this);
-	    game.physics.overlap(player, powerups, this.takeBonus, null, this);
+	    //	Collisions
+	    game.physics.overlap(fires, enemies, this.enemyHit, null, this);
 
-	    game.physics.overlap(this.fires, stones, this.enemyHit, null, this);
-	    game.physics.overlap(this.fires_sides, stones, this.enemyHit, null, this);
+	    game.physics.overlap(this.sideFires, this.bullets, this.enemyHit, null, this);
+
+	    game.physics.overlap(nukes, enemies, this.nukeHit, null, this);
+	    game.physics.overlap(nukes, this.bullets, this.nukeHit, null, this);
+
+	    game.physics.overlap(player, powerups, this.takeBonus, null, this);
+	    game.physics.overlap(sideShips, powerups, this.takeBonus, null, this);
+
+	    game.physics.collide(blasts, enemies, this.blastHit, null, this);
+	    game.physics.collide(blasts, this.bullets, this.blastHit, null, this);
 
 	    if (!player.invincible) {
 	    	player.alpha = 1;
+	    	sideShips.alpha = 1;
 	    	game.physics.overlap(player, this.bullets, this.playerHit, null, this);
-	    	game.physics.overlap(player, potatoes, this.playerHit, null, this);
-	    	game.physics.overlap(player, stones, this.playerHit, null, this);
+	    	game.physics.overlap(player, enemies, this.playerHit, null, this);
+		    game.physics.overlap(sideShips, potatoes, this.sideShipKill, null, this);
+		    game.physics.overlap(sideShips, this.bullets, this.sideShipKill, null, this);		    
 	    } else {
 
 	    	if (this.game.time.now > blinkTime) {
@@ -222,11 +268,28 @@ Game.Play.prototype = {
 		        blinkTime = game.time.now + 100;
 		        if (player.alpha == 1 ) {
 		        	player.alpha = 0.2;
+		        	sideShips.alpha = 0.1;
 		        } else {
 		        	player.alpha = 1;
+		        	sideShips.alpha = 1;
 		        }
 	    	}  
 	    }
+	},
+
+	sideShipKill: function(sideShip, bullet) {
+
+		bullet.kill();
+
+		explosion = game.add.sprite(sideShip.x, sideShip.y, 'explosion');
+	    explosion.anchor.setTo(0.5, 0.5);
+    	explosion.animations.add('boom');
+	    explosion.animations.play('boom', 10, false);
+
+	    explosion.events.onAnimationComplete.add(this.killObject, explosion);
+
+		sideShip.kill();
+
 	},
 
 	playerHit: function(player, bullet) {
@@ -253,9 +316,6 @@ Game.Play.prototype = {
 	    explosion.anchor.setTo(0.5, 0.5);
     	explosion.animations.add('boom');
 	    explosion.animations.play('boom', 10, false);
-	    
-	    game.add.tween(player).to( { y:playerY+20 }, 100, Phaser.Easing.Linear.None)
-	    		.to( { y:playerY }, 100, Phaser.Easing.Linear.None).start();
 
 	    if (player.weaponLevel > 1){
 	    	player.weaponLevel--;
@@ -267,7 +327,7 @@ Game.Play.prototype = {
 
 	},
 
-	takeBonus: function(player, powerup) {
+	takeBonus: function(p, powerup) {
 	    //this.bonus_s.play('', 0, 0.1);
 	    
 	    if (player.weaponLevel < this.maxWeaponLevel ) {
@@ -300,7 +360,41 @@ Game.Play.prototype = {
 
 	    enemy.life --;
 	},
+	nukeHit: function(fire, enemy) {		
+			    
 
+	    enemy.kill();
+	    
+	    var blast = blasts.getFirstExists(false);
+	    blast.reset(fire.x,fire.y);
+	    blast.anchor.setTo(0.5, 0.5);
+	    blast.scale.x = 4;
+	    blast.scale.y = 4;
+    	blast.animations.add('boom');
+	    blast.animations.play('boom', 10, false);
+	    blast.events.onAnimationComplete.add(this.killObject, blast);
+
+		fire.kill();
+
+	},
+	blastHit: function(nuke, enemy) {		
+
+	    if (enemy.alive) {
+		    explosion = game.add.sprite(enemy.x, enemy.y, 'explosion');
+		    if (explosion) {
+			    explosion.anchor.setTo(0.5, 0.5);
+		    	explosion.animations.add('boom');
+			    explosion.animations.play('boom', 10, false);
+
+			    explosion.events.onAnimationComplete.add(this.killObject, explosion);
+			}
+	    }
+
+	    enemy.kill();
+
+	    this.updateScore(10);
+
+	},
 	killObject: function (obj) {
 		obj.kill();
 	},
@@ -309,21 +403,16 @@ Game.Play.prototype = {
 		if (this.game.time.now > this.fireTime) {
 			this.fireTime = game.time.now + fireSpeed;
 
-			if (player.weaponLevel >= 4) {
-
-	            this.oneFire(player.x+player.width*1/5 , player.y +10);
-	            this.oneFire(player.x+player.width/2, player.y);
-	            this.oneFire(player.x+player.width*4/5, player.y+ 10);                        
-	        } else if (player.weaponLevel == 3) {
-	            this.oneFire(player.x+player.width*1/5 , player.y +10);
-	            this.oneFire(player.x+player.width/2, player.y);
-	            this.oneFire(player.x+player.width*4/5, player.y+ 10);                        
+			if (player.weaponLevel >= 3) {
+	            this.oneFire(player.x-10 , player.y +10);
+	            this.oneFire(player.x, player.y);
+	            this.oneFire(player.x+10, player.y+ 10);                        
 	        } else if (player.weaponLevel == 2) {
-	            this.oneFire(player.x+player.width*1/3, player.y);
-	            this.oneFire(player.x+player.width*2/3, player.y);
+	            this.oneFire(player.x-7, player.y);
+	            this.oneFire(player.x+7, player.y);
 	        } else {
 
-	            this.oneFire(player.x+player.width/2, player.y);
+	            this.oneFire(player.x, player.y);
 
 	        }
 
@@ -332,15 +421,36 @@ Game.Play.prototype = {
 			this.sidefireTime = game.time.now + 500;
 
 			if (player.weaponLevel >= 4) {
-				this.leftFire(player.x, player.y + 20);
-				this.rightFire(player.x+player.width, player.y + 20);
+				this.leftFire(player.x-player.width/2 + 3, player.y );
+				this.rightFire(player.x+player.width/2 - 3, player.y );
 	        }
 
 	    }
-	},
+	    for (var i = 1; i >= 0; i--) {
+		    ship = sideShips.getAt(i);
+		    if (ship && ship.alive && (this.game.time.now > ship.nukeTime)) {
+		    	ship.nukeTime = game.time.now + speeds.nukeFireSpeed;
+		    	this.nuke(ship);
+		    }
+	    };
 
+
+	},
+	nuke: function(ship) {
+	    var fire = nukes.getFirstExists(false);
+	    
+	    if (fire) {
+	    	this.centralize( fire );
+		    fire.reset(ship.x, ship.y- 10);
+		    fire.body.velocity.y =- 400;
+		    fire.angle = 180;
+		    fire.animations.add('move');
+		    fire.animations.play('move', 4, true);
+		    //fire.angle = 0;
+		}
+	},
 	oneFire: function(x, y) {
-	    var fire = this.fires.getFirstExists(false);
+	    var fire = this.frontFires.getFirstExists(false);
 	    
 	    if (fire) {
 	    	this.centralize( fire );
@@ -351,11 +461,11 @@ Game.Play.prototype = {
 	},
 
 	leftFire: function(x, y) {
-	    var fire = this.fires_sides.getFirstExists(false);
+	    var fire = this.sideFires.getFirstExists(false);
 	    
 	   	if (fire) {
 	   		fire.anchor.setTo(0.5, 0.5);
-		    fire.reset(x-fire.width/2, y-fire.height);
+		    fire.reset(x, y);
 		    fire.body.velocity.y =- 200;
 		    fire.body.velocity.x =- 50;
 		    //fire.angle = -20;
@@ -363,11 +473,11 @@ Game.Play.prototype = {
 
 	},
 	rightFire: function(x, y) {
-	    var fire = this.fires_sides.getFirstExists(false);
+	    var fire = this.sideFires.getFirstExists(false);
 	    
 	    if (fire) {
 	    	fire.anchor.setTo(0.5, 0.5);
-		    fire.reset(x-fire.width/2, y-fire.height);
+		    fire.reset(x, y);
 		    fire.body.velocity.y =- 200;
 		    fire.body.velocity.x =  50;
 		    //fire.angle = 20;

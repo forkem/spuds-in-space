@@ -9,6 +9,7 @@ if (w > 1000) {
 } 
 var score = 0;
 var highscore = 0;
+
 function rand(num){ return Math.floor(Math.random() * num) };
 
 Game.Load = function (game) {
