@@ -29,6 +29,7 @@ Game.Load.prototype = {
 	    game.load.image('bonus', 'images/bonus.png');
 		game.load.spritesheet('bullet', 'images/bullet.png', 16, 38);
 		game.load.spritesheet('explosion', 'images/explosion.png', 40, 40, 5	);
+		game.load.spritesheet('blast', 'images/blast.png', 160, 160, 5	);
 		game.load.image('enemy', 'images/enemy.png');
 		game.load.image('stone', 'images/stone.png');
 

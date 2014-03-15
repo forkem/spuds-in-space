@@ -75,7 +75,7 @@ Game.Play.prototype = {
 	    nukes.setAll('outOfBoundsKill', true);
 
 	    blasts = game.add.group();
-	    blasts.createMultiple(2, 'explosion');
+	    blasts.createMultiple(2, 'blast');
 	    blasts.setAll('outOfBoundsKill', true);
 
 		player = game.add.sprite(w/2, playerInitialY, 'ship_sprite');
@@ -368,8 +368,6 @@ Game.Play.prototype = {
 	    var blast = blasts.getFirstExists(false);
 	    blast.reset(fire.x,fire.y);
 	    blast.anchor.setTo(0.5, 0.5);
-	    blast.scale.x = 4;
-	    blast.scale.y = 4;
     	blast.animations.add('boom');
 	    blast.animations.play('boom', 10, false);
 	    blast.events.onAnimationComplete.add(this.killObject, blast);
