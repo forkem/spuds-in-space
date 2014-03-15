@@ -20,7 +20,7 @@ Game.Intro.prototype = {
 	},
 
 	update: function() {
-		 if (game.input.activePointer.isDown)
+		if (game.input.activePointer.isDown)
 	    {
 	    	this.startGame ();
 	    }
