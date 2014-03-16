@@ -288,7 +288,7 @@ Game.Play.prototype = {
 
 	    explosion.events.onAnimationComplete.add(this.killObject, explosion);
 
-		//sideShip.kill();
+		sideShip.kill();
 
 	},
 
@@ -338,10 +338,28 @@ Game.Play.prototype = {
 	    	if (player.weaponLevel > 3) {
 	        	fireSpeed = speeds.fastFireSpeed;
 	        } 
-
+	    this.getSideShip();
 	    powerup.kill();
 	},
+	getSideShip: function () {
+		var alive = sideShips.countLiving();
+		if ( alive > 1 ) {
+			return;
+		}
+		var ship = sideShips.getFirstExists(false);
+		this.checkBounds(ship);
+	    this.centralize(ship);
+	    ship.nukeTime = 0;
+		if (sideShips.getAt(0).alive) {
 
+		    ship.reset(player.x + 35, player.y - 10);
+		    
+		} else {
+
+		    ship.reset(player.x - 35, player.y - 10);
+
+		}
+	},
 	enemyHit: function(fire, enemy) {
 		
 		fire.kill();	    
