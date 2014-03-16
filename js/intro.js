@@ -11,8 +11,8 @@ Game.Intro.prototype = {
 	create: function () {
 		
 		bgTile = game.add.tileSprite(0, 0, w, h, 'bgtile');
-		var bg = game.add.sprite(w/2, h/2, 'intro');
-		bg.anchor.setTo(0.5, 0.5);
+		var bg = game.add.sprite(w/2, 0, 'intro');
+		bg.anchor.setTo(0.5, 0);
 		bg.inputEnabled=true;
 
     	bg.events.onInputDown.add(this.startGame);

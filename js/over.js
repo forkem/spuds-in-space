@@ -1,5 +1,4 @@
 Game.Over = function (game) {
-	this.cursor
 };
 
 Game.Over.prototype = {
@@ -18,7 +17,7 @@ Game.Over.prototype = {
 	    if (score > highscore) {
 			labelscore = game.add.text(w/2, h/2, 'New highscore!', { font: '18px pressstart2p', fill: '#fff', align: 'center' });
 			labelscore.anchor.setTo(0.5, 0.5);    	
-			labelhi = game.add.text(w/2, h/2 + labelscore.height + 10, score, { font: '18px pressstart2p', fill: '#fff', align: 'center' });
+			labelhi = game.add.text(w/2, h/2 + labelscore.height + 10, String(score), { font: '18px pressstart2p', fill: '#fff', align: 'center' });
 			labelhi.anchor.setTo(0.5, 0.5);
 			highscore = score;
 	    } else {
@@ -29,15 +28,13 @@ Game.Over.prototype = {
 		}
 		label3 = game.add.text(w/2, h-40, 'Insert coin', { font: '18px pressstart2p', fill: '#fff', align: 'center' });
 		label3.anchor.setTo(0.5, 0.5);
-
-		//this.cursor = game.input.keyboard.createCursorKeys();
-		this.time = this.game.time.now + 800;
-
-		//game.add.audio('dead').play('', 0, 0.2);
-		bg.events.onInputDown.add(this.startGame);
 	},
 
 	update: function() {
+		if (game.input.activePointer.isDown)
+	    {
+	    	this.startGame ();
+	    }
 		bgTile.tilePosition.y += 1;
 		//if (this.game.time.now > this.time && this.cursor.up.isDown)
 		if (game.input.keyboard.isDown(Phaser.Keyboard.ENTER))
