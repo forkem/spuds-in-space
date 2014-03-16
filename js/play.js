@@ -288,7 +288,7 @@ Game.Play.prototype = {
 
 	    explosion.events.onAnimationComplete.add(this.killObject, explosion);
 
-		sideShip.kill();
+		//sideShip.kill();
 
 	},
 
@@ -296,7 +296,7 @@ Game.Play.prototype = {
 
 	    player.alpha = 0.2;
 		this.makeInvincible();
-	    player.lives -= 1;
+	    //player.lives -= 1;
 
 	    if (player.lives == 2) {
 	    	this.life3.alpha = 0.5;
@@ -448,6 +448,7 @@ Game.Play.prototype = {
 		}
 	},
 	oneFire: function(x, y) {
+		return;
 	    var fire = this.frontFires.getFirstExists(false);
 	    
 	    if (fire) {
